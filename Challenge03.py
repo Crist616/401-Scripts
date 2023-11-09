@@ -20,7 +20,7 @@ def send_email(sender, password, recipient, subject, body):
 email = input("Enter your email: ")
 password = input("Enter your password: ")
 
-DEST_IP = "192.168.1.100"
+DEST_IP = "192.168.1.100" #any ip (without multiping)
 prev_status = None
 
 while True:
