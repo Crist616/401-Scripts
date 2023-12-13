@@ -2,79 +2,60 @@
 
 #Cris
 #17/11/2023
+# Revision on 13/12/2023
 
 from cryptography.fernet import Fernet
+import os
 
-def encrypt_file(filepath, key):
-    with open(filepath, 'rb') as file:
-        file_data = file.read()
-    f = Fernet(key)
-    encrypted_data = f.encrypt(file_data)
-    with open(filepath, 'wb') as file:
-        file.write(encrypted_data)
+def generate_key():
+    return Fernet.generate_key() 
 
-def decrypt_file(filepath, key):
-    with open(filepath, 'rb') as file:
-        file_data = file.read()
-    f = Fernet(key)
-    decrypted_data = f.decrypt(file_data)
-    with open(filepath, 'wb') as file:
-        file.write(decrypted_data)
+def encrypt_file(key, in_filename, out_filename):
+    fernet = Fernet(key)
+    with open(in_filename, 'rb') as file:
+        plaintext = file.read()
+    ciphertext = fernet.encrypt(plaintext)
+    with open(out_filename, 'wb') as file:
+        file.write(ciphertext)
+        
+def decrypt_file(key, in_filename, out_filename):
+    fernet = Fernet(key)
+    with open(in_filename, 'rb') as file:
+        ciphertext = file.read()
+    plaintext = fernet.decrypt(ciphertext)
+    with open(out_filename, 'wb') as file:
+        file.write(plaintext)
 
-def encrypt_message(message, key):
-    f = Fernet(key)
-    encrypted_message = f.encrypt(message.encode())
-    print("Encrypted message:", encrypted_message)
+def encrypt_folder(key, in_folder, out_folder):
+    if not os.path.exists(out_folder):
+        os.mkdir(out_folder)
 
-def decrypt_message(encrypted_message, key):
-    f = Fernet(key)
-    decrypted_message = f.decrypt(encrypted_message)
-    print("Decrypted message:", decrypted_message.decode())
+    for filename in os.listdir(in_folder):
+        in_path = os.path.join(in_folder, filename)
+        out_path = os.path.join(out_folder, filename + '.enc')
+        
+        encrypt_file(key, in_path, out_path)
+        
+def decrypt_folder(key, in_folder, out_folder):
+    if not os.path.exists(out_folder):
+        os.mkdir(out_folder)
 
-mode = input("Select mode (1=encrypt file, 2=decrypt file, 3=encrypt message, 4=decrypt message): ")
+    for filename in os.listdir(in_folder):
+        if filename.endswith('.enc'):
+            in_path = os.path.join(in_folder, filename)
+            out_path = os.path.join(out_folder, os.path.splitext(filename)[0])
+            
+            decrypt_file(key, in_path, out_path)
+            
+if __name__ == '__main__':
+    key = generate_key()
+    
+    in_folder = '/data/input'
+    out_folder = '/data/encrypted'
+    
+    encrypt_folder(key, in_folder, out_folder)
+    
+    decrypt_folder(key, out_folder, '/data/decrypted')
 
-key = Fernet.generate_key()
-
-if mode == '1':
-    filepath = input("Enter filepath to encrypt: ")
-    encrypt_file(filepath, key)
-elif mode == '2':
-    filepath = input("Enter filepath to decrypt: ")
-    decrypt_file(filepath, key)
-elif mode == '3':
-    message = input("Enter message to encrypt: ")
-    encrypt_message(message, key)
-elif mode == '4':
-    encrypted_message = input("Enter message to decrypt: ")
-    decrypt_message(encrypted_message, key)
 
 
-    # Encrypt /home/test folder recursively 
-$folder = "/home/test"
-$password = Read-Host -Prompt "Enter encryption password" -AsSecureString
-Encrypt-Folder $folder -Password $password -Recurse
-
-    # Decrypt /home/test folder recursively
-$folder = "/home/test" 
-$password = Read-Host -Prompt "Enter decryption password" -AsSecureString
-Decrypt-Folder $folder -Password $password -Recurse
-
-function Encrypt-Folder {
-  param(
-    [string]$folder,
-    [SecureString]$password,
-    [switch]$recurse
-  )
-  
-    # Encryption  using $password 
-}
-
-function Decrypt-Folder {
- param(
-    [string]$folder,
-    [SecureString]$password,
-    [switch]$recurse
-  )
-
-    # Decryption logic using $password
-}
